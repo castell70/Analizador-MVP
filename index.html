@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVP Analyzer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1 class="app-title">MVP Analyzer</h1>
+            <div class="powered-by">
+                <span class="powered-text">Powered by ITCPO</span>
+            </div>
+        </div>
+    </header>
+
+    <div id="messageBox" class="message-box" aria-live="polite" role="status"></div>
+
+    <nav class="nav-menu">
+        <button class="nav-btn active" data-section="dashboard">Dashboard</button>
+        <button class="nav-btn" data-section="product">Producto</button>
+        <button class="nav-btn" data-section="market">Mercado</button>
+        <button class="nav-btn" data-section="features">Características</button>
+        <button class="nav-btn" data-section="timeline">Timeline</button>
+        <button class="nav-btn" data-section="report">Informe</button>
+        <button class="nav-btn" data-section="ia-report">Informe IA</button>
+    </nav>
+
+    <main class="main-content">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="section active">
+            <div class="dashboard-content">
+                <h2>Bienvenido a MVP Analyzer</h2>
+                <p class="subtitle">Desarrolla tu Producto Mínimo Viable de forma estratégica</p>
+                <div class="quick-stats">
+                    <div class="stat-card">
+                        <span class="stat-number" id="stat-progress">0%</span>
+                        <span class="stat-label">Completitud</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="stat-sections">0/6</span>
+                        <span class="stat-label">Secciones</span>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="navigateTo('product')">Comenzar Análisis</button>
+                <button class="btn btn-secondary" onclick="loadDemoData()">Cargar Demostración</button>
+                <button class="btn btn-secondary" onclick="clearData()">Limpiar Datos</button>
+            </div>
+        </section>
+
+        <!-- Product Section -->
+        <section id="product" class="section">
+            <h2>Información del Producto</h2>
+            <form id="productForm" class="form-group">
+                <div class="input-group">
+                    <label>Nombre del Producto</label>
+                    <input type="text" id="productName" placeholder="Ej: AppX" required>
+                </div>
+                <div class="input-group">
+                    <label>Descripción General</label>
+                    <textarea id="productDesc" placeholder="Describe brevemente tu producto" required></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Propuesta de Valor Única</label>
+                    <textarea id="productValue" placeholder="¿Qué lo hace diferente?" required></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Objetivo Principal del MVP</label>
+                    <input type="text" id="productObjective" placeholder="Ej: Validar interés de usuarios" required>
+                </div>
+                <button type="button" class="btn btn-secondary" onclick="saveSection('product')">Guardar</button>
+            </form>
+        </section>
+
+        <!-- Market Section -->
+        <section id="market" class="section">
+            <h2>Análisis de Mercado</h2>
+            <form id="marketForm" class="form-group">
+                <div class="input-group">
+                    <label>Mercado Objetivo</label>
+                    <input type="text" id="targetMarket" placeholder="Ej: Empresas PYME en Latam" required>
+                </div>
+                <div class="input-group">
+                    <label>Tamaño del Mercado</label>
+                    <input type="text" id="marketSize" placeholder="Ej: 50,000 potenciales usuarios" required>
+                </div>
+                <div class="input-group">
+                    <label>Competencia Principal</label>
+                    <textarea id="competition" placeholder="Describe tus principales competidores" required></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Ventaja Competitiva</label>
+                    <textarea id="advantage" placeholder="¿Por qué los usuarios elegirían tu producto?" required></textarea>
+                </div>
+                <button type="button" class="btn btn-secondary" onclick="saveSection('market')">Guardar</button>
+            </form>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="section">
+            <h2>Características MVP</h2>
+            <form id="featuresForm" class="form-group">
+                <div class="input-group">
+                    <label>Características Principales (una por línea)</label>
+                    <textarea id="mainFeatures" placeholder="Función 1&#10;Función 2&#10;Función 3" required></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Características Secundarias (una por línea)</label>
+                    <textarea id="secondaryFeatures" placeholder="Función adicional 1&#10;Función adicional 2"></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Características Futuras</label>
+                    <textarea id="futureFeatures" placeholder="Características para v2 y posteriores"></textarea>
+                </div>
+                <button type="button" class="btn btn-secondary" onclick="saveSection('features')">Guardar</button>
+            </form>
+        </section>
+
+        <!-- Timeline Section -->
+        <section id="timeline" class="section">
+            <h2>Cronograma del Proyecto</h2>
+            <form id="timelineForm" class="form-group">
+                <div class="input-group">
+                    <label>Duración Estimada (semanas)</label>
+                    <input type="number" id="duration" placeholder="Ej: 12" min="1" required>
+                </div>
+                <div class="input-group">
+                    <label>Equipo Requerido</label>
+                    <textarea id="team" placeholder="Ej: 1 Developer, 1 Designer, 1 PM" required></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Presupuesto Estimado</label>
+                    <input type="number" id="budget" placeholder="Ej: 15000" min="0" required>
+                </div>
+                <div class="input-group">
+                    <label>Hitos Principales</label>
+                    <textarea id="milestones" placeholder="Semana 2: Design complete&#10;Semana 6: Beta testing" required></textarea>
+                </div>
+                <button type="button" class="btn btn-secondary" onclick="saveSection('timeline')">Guardar</button>
+            </form>
+        </section>
+
+        <!-- Report Section -->
+        <section id="report" class="section">
+            <h2>Informe MVP</h2>
+            <div class="report-preview" id="reportPreview">
+                <p class="placeholder">Completa todas las secciones para generar el informe</p>
+            </div>
+            <button class="btn btn-primary" onclick="generatePDF()">Descargar PDF</button>
+            <button class="btn btn-secondary" onclick="printReport()">Imprimir</button>
+        </section>
+
+        <!-- AI Report Section -->
+        <section id="ia-report" class="section">
+            <h2>Informe generado por IA</h2>
+            <div class="form-group">
+                <p style="margin-bottom:12px;">Genera un informe analítico basado en los datos ingresados. El agente IA sintetiza Resumen ejecutivo, Descripción del producto, Análisis de Mercado, Características del MVP, propone un Cronograma de Recursos, Pasos para ejecutar el MVP y Métricas de éxito.</p>
+                <div id="iaReportPreview" class="report-preview">
+                    <p class="placeholder">Presiona "Generar Informe IA" para producir el informe.</p>
+                </div>
+                <div style="display:flex; gap:8px; margin-top:12px;">
+                    <button class="btn btn-primary" onclick="generateAIReport()">Generar Informe IA</button>
+                    <button class="btn btn-secondary" onclick="downloadAIReportPDF()">Descargar PDF</button>
+                    <button class="btn btn-secondary" onclick="downloadAIReportWord()">Descargar Word</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Help Button -->
+    <button class="help-btn" onclick="toggleHelp()">?</button>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="toggleHelp()">&times;</button>
+            <h2>Guía de Uso MVP Analyzer</h2>
+            <div class="help-content">
+                <h3>¿Qué es un MVP?</h3>
+                <p>Un Producto Mínimo Viable (MVP) es la versión más simple de tu producto que puede satisfacer a los clientes iniciales y proporcionar retroalimentación valiosa.</p>
+
+                <h3>Secciones de la Aplicación</h3>
+                <ul>
+                    <li><strong>Dashboard:</strong> Panel de control y progreso general</li>
+                    <li><strong>Producto:</strong> Define tu idea y propuesta de valor</li>
+                    <li><strong>Mercado:</strong> Analiza tu mercado objetivo y competencia</li>
+                    <li><strong>Características:</strong> Prioriza qué incluir en el MVP</li>
+                    <li><strong>Timeline:</strong> Planifica el cronograma y recursos</li>
+                    <li><strong>Informe:</strong> Genera un documento PDF profesional</li>
+                </ul>
+
+                <h3>Botones y funcionalidades nuevas</h3>
+                <ul>
+                    <li><strong>Cargar Demostración:</strong> Rellena automáticamente todas las secciones con datos de ejemplo para explorar el flujo y generar un informe de prueba.</li>
+                    <li><strong>Limpiar Datos:</strong> Resetea todos los campos y borra los datos almacenados en la sesión para empezar desde cero.</li>
+                    <li><strong>Guardar (por sección):</strong> Almacena la información de cada formulario en la memoria de la aplicación y actualiza el progreso del dashboard.</li>
+                    <li><strong>Descargar PDF:</strong> Genera y descarga un informe PDF con el contenido consolidado del MVP (requiere completar todas las secciones).</li>
+                    <li><strong>Imprimir:</strong> Abre una ventana lista para imprimir con el informe; también requiere completar todas las secciones.</li>
+                    <li><strong>Cuadro de Mensajes:</strong> Notificaciones y validaciones aparecen en el cuadro fijo superior derecho; puedes cerrarlas manualmente o esperar que desaparezcan automáticamente.</li>
+                </ul>
+
+                <h3>Cómo Usar</h3>
+                <ol>
+                    <li>Navega entre las secciones usando el menú superior o los botones del dashboard.</li>
+                    <li>Completa cada formulario con información detallada y haz clic en "Guardar" para cada sección.</li>
+                    <li>Usa "Cargar Demostración" para ver un ejemplo completo y "Limpiar Datos" para reiniciar.</li>
+                    <li>En la sección "Informe" haz clic en "Descargar PDF" o "Imprimir" cuando todas las secciones estén guardadas.</li>
+                    <li>Observa las notificaciones en el cuadro de mensajes para confirmaciones o errores.</li>
+                </ol>
+
+                <h3>Consejos Importantes</h3>
+                <ul>
+                    <li>Sé específico y realista en tus estimaciones</li>
+                    <li>Enfócate en las características esenciales para el MVP</li>
+                    <li>Valida tus supuestos con usuarios reales</li>
+                    <li>Itera basándote en feedback constante</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
