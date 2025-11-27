@@ -17,6 +17,33 @@ import html2canvas from 'https://esm.sh/html2canvas@1.4.1';
     };
 })();
 
+// NEW: Global event handlers to suppress DataCloneError bubbling as uncaught exceptions
+window.addEventListener('error', (ev) => {
+    try {
+        // ev.message may contain DataCloneError text in some browsers; ev.error may have name
+        if ((ev.error && ev.error.name === 'DataCloneError') || (typeof ev.message === 'string' && ev.message.includes('DataCloneError'))) {
+            // Prevent the error from being logged as uncaught
+            ev.preventDefault();
+            console.warn('Suppressed uncaught DataCloneError:', ev.error || ev.message);
+        }
+    } catch (e) {
+        // no-op
+    }
+});
+
+// Also suppress promise rejections that may surface a DataCloneError
+window.addEventListener('unhandledrejection', (ev) => {
+    try {
+        const reason = ev.reason;
+        if ((reason && reason.name === 'DataCloneError') || (typeof reason === 'string' && reason.includes('DataCloneError'))) {
+            ev.preventDefault();
+            console.warn('Suppressed unhandledrejection DataCloneError:', reason);
+        }
+    } catch (e) {
+        // no-op
+    }
+});
+
 // Data Storage
 const appData = {
     product: {},
