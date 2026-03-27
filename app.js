@@ -79,6 +79,75 @@ function saveSection(section) {
     showMessage('Sección guardada correctamente', 'success');
 }
 
+ // Generate a short value proposition based on product fields (improved)
+function generateValueProposal() {
+    const nameEl = document.getElementById('productName');
+    const descEl = document.getElementById('productDesc');
+    const objEl = document.getElementById('productObjective');
+    const marketEl = document.getElementById('targetMarket'); // may be undefined on product section, but useful when available
+    const valueEl = document.getElementById('productValue');
+    if (!descEl || !valueEl) return;
+
+    const name = (nameEl && nameEl.value || '').trim();
+    const desc = (descEl.value || '').trim();
+    const objective = (objEl && objEl.value || '').trim();
+    const market = (marketEl && marketEl.value || '').trim();
+
+    if (!desc && !objective && !name) {
+        showMessage('Proporciona al menos Nombre, Descripción u Objetivo para generar la propuesta', 'error');
+        return;
+    }
+
+    // Normalize and remove common stopwords to get meaningful keywords
+    const stopwords = new Set([
+        'que','con','para','por','como','entre','sobre','una','un','el','la','los','las','y',
+        'del','de','en','al','se','es','su','sus','más','mejor','nuevo','nuestra','nuestro'
+    ]);
+
+    const textSource = [name, desc, objective, market].filter(Boolean).join(' ');
+    const cleaned = textSource
+        .replace(/[\u00A0-\u9999<>\&\/\\.,;:()"\-—_]/g, ' ')
+        .toLowerCase()
+        .split(/\s+/)
+        .map(w => w.trim())
+        .filter(w => w.length > 3 && !stopwords.has(w));
+
+    // Count frequency to surface relevant terms
+    const freq = {};
+    cleaned.forEach(w => freq[w] = (freq[w] || 0) + 1);
+    const keywords = Object.keys(freq)
+        .sort((a,b) => freq[b] - freq[a])
+        .slice(0, 5)
+        .map(k => k.charAt(0).toUpperCase() + k.slice(1));
+
+    // Build focused lead sentence using available fields
+    let lead = '';
+    if (name) {
+        lead = `${name} es${objective ? ' — ' + objective : ''}`;
+    } else if (desc) {
+        const firstSentence = desc.split(/[.\n]/).find(s => s.trim());
+        lead = firstSentence ? firstSentence.trim() : desc.slice(0, 120);
+    } else {
+        lead = objective || 'Producto sin nombre';
+    }
+
+    // Compose value proposition with clear benefits tied to inputs
+    const benefits = [];
+    if (keywords.length) benefits.push(`${keywords.join(' · ')}`);
+    if (objective) benefits.push('enfocado en: ' + objective);
+    if (market) benefits.push('dirigido a: ' + market);
+
+    const proposal = `${lead}. Propuesta de valor: ${benefits.join(' — ')}. Beneficio clave: reduce fricción y costos, mejora la adopción y entrega valor claro desde la primera experiencia.`;
+
+    valueEl.value = proposal;
+
+    // Keep in-memory product data consistent
+    appData.product = appData.product || {};
+    appData.product.productValue = proposal;
+
+    showMessage('Propuesta de valor generada automáticamente', 'success', 3000);
+}
+
 // Update Progress
 function updateProgress() {
     const sections = ['product', 'market', 'features', 'timeline'];
@@ -394,7 +463,7 @@ function hideMessage() {
     }
 }
 
-// Expose functions to global scope
+ // Expose functions to global scope
 window.navigateTo = navigateTo;
 window.saveSection = saveSection;
 window.toggleHelp = toggleHelp;
@@ -410,63 +479,121 @@ window.hideMessage = hideMessage;
 window.generateAIReport = generateAIReport;
 window.downloadAIReportPDF = downloadAIReportPDF;
 window.downloadAIReportWord = downloadAIReportWord;
+window.generateValueProposal = generateValueProposal;
+
+// New exports for report JSON and loading
+window.addReportData = addReportData;
+window.downloadDataJSON = downloadDataJSON;
+window.loadReports = loadReports;
 
 // New: AI report generation (local agent simulation)
 function simulateAIAgent(data) {
-    // Basic synthesis using available fields - emulate analysis and suggestions
+    // Comprehensive professional synthesis using all available fields
     const p = data.product || {};
     const m = data.market || {};
     const f = data.features || {};
     const t = data.timeline || {};
 
-    const mainFeatures = f.mainFeatures ? f.mainFeatures.split('\n').filter(x => x.trim()) : [];
-    const secondaryFeatures = f.secondaryFeatures ? f.secondaryFeatures.split('\n').filter(x => x.trim()) : [];
-    const futureFeatures = f.futureFeatures ? f.futureFeatures.split('\n').filter(x => x.trim()) : [];
-    const milestones = t.milestones ? t.milestones.split('\n').filter(x => x.trim()) : [];
+    const mainFeatures = f.mainFeatures ? f.mainFeatures.split('\n').map(s => s.trim()).filter(Boolean) : [];
+    const secondaryFeatures = f.secondaryFeatures ? f.secondaryFeatures.split('\n').map(s => s.trim()).filter(Boolean) : [];
+    const futureFeatures = f.futureFeatures ? f.futureFeatures.split('\n').map(s => s.trim()).filter(Boolean) : [];
+    const milestones = t.milestones ? t.milestones.split('\n').map(s => s.trim()).filter(Boolean) : [];
 
-    // Create analyst-style narrative
-    const executive = `El MVP propuesto (${p.productName || 'Sin nombre'}) busca validar: ${p.productObjective || 'objetivo no especificado'}. Se recomienda priorizar un conjunto mínimo de funciones que permitan medir adopción y retención.`;
-    const desc = `${p.productDesc || 'Descripción no disponible.'} Propuesta de valor: ${p.productValue || 'No especificada.'}`;
-    const marketAnalysis = `Mercado objetivo: ${m.targetMarket || 'No especificado'}. Tamaño estimado: ${m.marketSize || 'N/A'}. Competencia principal: ${m.competition || 'N/A'}. Ventaja competitiva: ${m.advantage || 'N/A'}. Recomendación: focalizar en segmentos con menor penetración de soluciones costosas y mayor sensibilidad al precio.`;
-    const featuresText = `Características principales sugeridas: ${mainFeatures.length ? mainFeatures.join('; ') : 'No se listaron características principales.'}` +
-        (secondaryFeatures.length ? ` Características secundarias: ${secondaryFeatures.join('; ')}.` : '') +
-        (futureFeatures.length ? ` Futuras: ${futureFeatures.join('; ')}.` : '');
-    const schedule = `Propuesta de cronograma: Duración total estimada ${t.duration ? t.duration + ' semanas' : 'no especificada'}. Equipo sugerido: ${t.team || 'no especificado'}. Presupuesto estimado: ${t.budget ? '$' + t.budget : 'no especificado'}. Hitos clave: ${milestones.length ? milestones.join('; ') : 'Definir hitos principales'}. Recomendación: dividir en sprints de 2 semanas y priorizar entrega de una ruta crítica (autenticación, creación de tareas, vista principal).`;
-    const steps = `Pasos recomendados: 1) Validación con 10-20 usuarios; 2) Prototipado; 3) Desarrollo de las características núcleo; 4) Pruebas beta; 5) Lanzamiento limitado; 6) Medición y ajustes.`;
-    const metrics = `Métricas de éxito propuestas: tasa de adopción inicial, retención 7/30 días, NPS, tiempo medio hasta primer valor (TTFV), conversión a usuarios pagos (si aplica).`;
+    // Extract concise insight bullets
+    const insights = [];
+    if (p.productObjective) insights.push(`Objetivo claro: ${p.productObjective}`);
+    if (p.productValue) insights.push(`Propuesta de valor: ${p.productValue}`);
+    if (m.targetMarket) insights.push(`Segmento objetivo: ${m.targetMarket}`);
+    if (m.marketSize) insights.push(`Tamaño de mercado: ${m.marketSize}`);
+    if (m.competition) insights.push(`Competidores clave: ${m.competition}`);
+    if (t.duration) insights.push(`Duración propuesta: ${t.duration} semanas`);
+    if (t.budget) insights.push(`Presupuesto estimado: $${t.budget}`);
 
-    // Combine into HTML
+    // Prioritization recommendation based on available features
+    const prioritized = mainFeatures.slice(0, 5);
+    const riskNotes = [];
+    if (!p.productValue) riskNotes.push('Propuesta de valor poco definida — riesgo en comunicación a usuarios.');
+    if (!m.targetMarket) riskNotes.push('Segmento objetivo no especificado — dificulta priorización comercial.');
+    if (!mainFeatures.length) riskNotes.push('Falta definición de características núcleo — priorizar 3 funciones imprescindibles.');
+    if (!t.duration || !t.team) riskNotes.push('Cronograma o equipo incompleto — validar recursos antes de comprometer hitos.');
+
+    // Polished narrative sections
+    const executive = `<strong>${p.productName || 'Producto sin nombre'}</strong> — Resumen ejecutivo: ${p.productObjective ? `${p.productObjective}.` : ''} Se propone un MVP minimalista que permita validar hipótesis de valor con usuarios reales en fases cortas y medibles.`;
+    const description = `${p.productDesc ? `${p.productDesc}` : 'No se proporcionó descripción.'}` + (p.productValue ? ` Propuesta de valor: ${p.productValue}` : '');
+    const marketAnalysis = `El mercado objetivo identificado es ${m.targetMarket || 'no especificado'}. ${m.marketSize ? `Tamaño estimado: ${m.marketSize}.` : ''} Competencia y posición: ${m.competition || 'no documentada'}. Ventaja competitiva declarada: ${m.advantage || 'no especificada'}. Recomendación: focalizar lanzamiento en subsegmentos con alta sensibilidad a precio y necesidad evidente del problema.`;
+    const featuresSection = prioritized.length
+        ? `<p>Características prioritarias a entregar en el MVP:</p><ul>${prioritized.map(x => `<li>${x}</li>`).join('')}</ul>`
+        : `<p>No hay características principales definidas. Priorizar 3 funcionalidades que generen valor inmediato.</p>`;
+
+    // Next steps and tactical plan
+    const tactical = [
+        'Validación rápida: Realizar entrevistas y pruebas con 10–20 usuarios objetivo para comprobar demanda.',
+        'Prototipado y pruebas de usabilidad: iterar hasta alcanzar TTFV (tiempo hasta primer valor) bajo.',
+        'Implementación en sprints de 2 semanas concentrando la ruta crítica (autenticación, flujo principal, métricas).',
+        'Beta controlada: liberar a un grupo reducido, medir, corregir y escalar.'
+    ];
+
+    // Metrics and KPIs
+    const metrics = [
+        'Tasa de adopción inicial (días 0–7)',
+        'Retención 7 / 30 días',
+        'TTFV (tiempo hasta primer valor percep.)',
+        'NPS o CSAT',
+        'Conversiones a pago (si aplica)'
+    ];
+
+    // Compose elegant HTML
     const html = `
         <div class="report-section">
             <h3>Resumen Ejecutivo</h3>
             <p>${executive}</p>
+            ${insights.length ? `<ul>${insights.map(i => `<li>${i}</li>`).join('')}</ul>` : ''}
         </div>
+
         <div class="report-section">
-            <h3>Descripción del producto</h3>
-            <p>${desc}</p>
+            <h3>Descripción y Propuesta de Valor</h3>
+            <p>${description}</p>
         </div>
+
         <div class="report-section">
-            <h3>Análisis de Mercado</h3>
+            <h3>Análisis de Mercado y Competencia</h3>
             <p>${marketAnalysis}</p>
         </div>
+
         <div class="report-section">
-            <h3>Características del MVP</h3>
-            <p>${featuresText}</p>
+            <h3>Características del MVP y Priorización</h3>
+            ${featuresSection}
+            ${secondaryFeatures.length ? `<p>Características secundarias sugeridas:</p><ul>${secondaryFeatures.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}
+            ${futureFeatures.length ? `<p>Visión futura (v2+):</p><ul>${futureFeatures.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}
         </div>
+
         <div class="report-section">
-            <h3>Cronograma de Recursos Propuesto</h3>
-            <p>${schedule}</p>
+            <h3>Cronograma y Recursos</h3>
+            <p>Duración estimada: ${t.duration ? t.duration + ' semanas' : 'No especificada'}.</p>
+            <p>Equipo recomendado: ${t.team || 'No especificado'}.</p>
+            <p>Presupuesto estimado: ${t.budget ? '$' + t.budget : 'No especificado'}.</p>
+            ${milestones.length ? `<p>Hitos clave:</p><ul>${milestones.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}
         </div>
+
         <div class="report-section">
-            <h3>Pasos para ejecutar el MVP</h3>
-            <p>${steps}</p>
+            <h3>Plan de Acción (Próximos Pasos)</h3>
+            <ol>${tactical.map(s => `<li>${s}</li>`).join('')}</ol>
         </div>
+
         <div class="report-section">
-            <h3>Métricas de Éxito</h3>
-            <p>${metrics}</p>
+            <h3>Métricas Recomendadas</h3>
+            <ul>${metrics.map(m => `<li>${m}</li>`).join('')}</ul>
         </div>
+
         <div class="report-section">
-            <p style="margin-top: 16px; font-size:13px; color:#666;">Generado por el Agente IA local de MVP Analyzer - ${new Date().toLocaleDateString('es-ES')}</p>
+            <h3>Riesgos y Mitigaciones</h3>
+            ${riskNotes.length ? `<ul>${riskNotes.map(r => `<li>${r}</li>`).join('')}</ul>` : `<p>No se detectaron riesgos críticos con los datos proporcionados; revisar en siguientes iteraciones.</p>`}
+        </div>
+
+        <div class="report-section">
+            <p style="margin-top: 16px; font-size:13px; color:#666;">
+                Observaciones: este informe sintetiza los datos ingresados y ofrece priorización táctica y métricas claras para validar el MVP en fases. Generado por el Agente IA local de MVP Analyzer — ${new Date().toLocaleDateString('es-ES')}.
+            </p>
         </div>
     `;
     return html;
@@ -545,6 +672,84 @@ function downloadAIReportWord() {
     }, 1000);
 
     showMessage('Documento Word descargado', 'success');
+}
+
+function addReportData() {
+    // Populate the report preview with currently saved data
+    const sections = ['product','market','features','timeline'];
+    const hasAny = sections.some(s => Object.keys(appData[s]).length > 0);
+    const reportPreview = document.getElementById('reportPreview');
+    if (!hasAny) {
+        showMessage('No hay datos guardados para agregar al informe', 'error');
+        return;
+    }
+    reportPreview.innerHTML = `<div class="report-content visible">${buildReportHTML()}</div>`;
+    showMessage('Datos agregados al esquema del informe', 'success');
+    navigateTo('report');
+}
+
+function downloadDataJSON() {
+    // Download appData as JSON for backup
+    try {
+        const dataStr = JSON.stringify(appData, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const fileName = (appData.product && appData.product.productName ? appData.product.productName : 'MVP_Data') + '_backup.json';
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 800);
+        showMessage('Backup JSON descargado', 'success');
+    } catch (err) {
+        console.error('Error exporting JSON:', err);
+        showMessage('Error al descargar JSON', 'error');
+    }
+}
+
+function loadReports() {
+    // Allow user to load a JSON backup and populate app
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+    input.style.display = 'none';
+    input.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                const json = JSON.parse(ev.target.result);
+                // Validate minimal structure
+                if (typeof json !== 'object' || json === null) throw new Error('JSON inválido');
+                appData.product = json.product || {};
+                appData.market = json.market || {};
+                appData.features = json.features || {};
+                appData.timeline = json.timeline || {};
+                // fill forms
+                fillFormFields('product');
+                fillFormFields('market');
+                fillFormFields('features');
+                fillFormFields('timeline');
+                updateProgress();
+                showMessage('Informe cargado desde JSON', 'success');
+                navigateTo('dashboard');
+            } catch (err) {
+                console.error('Error loading JSON:', err);
+                showMessage('Error al cargar el archivo JSON', 'error');
+            }
+        };
+        reader.readAsText(file, 'utf-8');
+    });
+    document.body.appendChild(input);
+    input.click();
+    setTimeout(() => {
+        document.body.removeChild(input);
+    }, 1000);
 }
 
 // Initialize event listeners

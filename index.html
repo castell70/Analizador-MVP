@@ -44,9 +44,12 @@
                         <span class="stat-label">Secciones</span>
                     </div>
                 </div>
-                <button class="btn btn-primary" onclick="navigateTo('product')">Comenzar Análisis</button>
-                <button class="btn btn-secondary" onclick="loadDemoData()">Cargar Demostración</button>
-                <button class="btn btn-secondary" onclick="clearData()">Limpiar Datos</button>
+                <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+                    <button class="btn btn-primary" onclick="navigateTo('product')">Comenzar Análisis</button>
+                    <button class="btn btn-secondary" onclick="loadDemoData()">Cargar Demostración</button>
+                    <button class="btn btn-secondary" onclick="clearData()">Limpiar Datos</button>
+                    <button class="btn btn-secondary" onclick="loadReports()" title="Cargar un archivo JSON de respaldo">Cargar informes</button>
+                </div>
             </div>
         </section>
 
@@ -64,7 +67,13 @@
                 </div>
                 <div class="input-group">
                     <label>Propuesta de Valor Única</label>
-                    <textarea id="productValue" placeholder="¿Qué lo hace diferente?" required></textarea>
+                    <div style="display:flex; gap:8px; align-items:flex-start; flex-direction:column;">
+                        <textarea id="productValue" placeholder="¿Qué lo hace diferente?" required style="min-height:80px; width:100%;"></textarea>
+                        <div style="display:flex; gap:8px; margin-top:6px;">
+                            <button type="button" class="btn btn-secondary" onclick="generateValueProposal()" style="padding:8px 12px; font-size:13px;">Generar propuesta automática</button>
+                            <span style="color:#666; font-size:13px; align-self:center;">Generará una propuesta relacionada a la descripción general.</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="input-group">
                     <label>Objetivo Principal del MVP</label>
@@ -148,8 +157,12 @@
             <div class="report-preview" id="reportPreview">
                 <p class="placeholder">Completa todas las secciones para generar el informe</p>
             </div>
-            <button class="btn btn-primary" onclick="generatePDF()">Descargar PDF</button>
-            <button class="btn btn-secondary" onclick="printReport()">Imprimir</button>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button class="btn btn-primary" onclick="generatePDF()">Descargar PDF</button>
+                <button class="btn btn-secondary" onclick="printReport()">Imprimir</button>
+                <button class="btn btn-secondary" onclick="addReportData()" title="Agregar los datos guardados al esquema del informe">Agregar datos al informe</button>
+                <button class="btn btn-secondary" onclick="downloadDataJSON()" title="Descargar respaldo JSON de los datos">Descargar JSON</button>
+            </div>
         </section>
 
         <!-- AI Report Section -->
